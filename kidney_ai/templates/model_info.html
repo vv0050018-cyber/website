@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}Model Architecture & Metrics - KIDNEY AI{% endblock %}
+
+{% block content %}
+<div class="model-info-container">
+    <div class="page-header">
+        <span class="section-pill"><i class="fa-solid fa-brain"></i> Machine Learning Architecture</span>
+        <h2 class="page-title">Model Specifications & Evaluation Metrics</h2>
+        <p class="page-desc">
+            Empirical test set evaluation metrics computed from trained Support Vector Machine and Decision Tree classifiers.
+        </p>
+    </div>
+
+    <!-- Algorithm Overview Grid -->
+    <div class="algo-info-grid">
+        <div class="algo-detail-card">
+            <div class="algo-header">
+                <i class="fa-solid fa-vector-square"></i>
+                <div>
+                    <h3>Support Vector Machine (SVM)</h3>
+                    <span class="badge badge-info">Primary Boundary Classifier</span>
+                </div>
+            </div>
+            <p>
+                Maps radiomic feature vectors to an infinite-dimensional reproducing kernel Hilbert space using a 
+                <strong>Radial Basis Function (RBF) kernel</strong> ($\gamma = \text{scale}$, $C = 1.5$). Multi-class classification 
+                is executed via one-vs-one (OvO) decision functions with Platt sigmoid probability calibration.
+            </p>
+            <div class="spec-pills">
+                <span>Kernel: RBF</span>
+                <span>Gamma: Scale</span>
+                <span>Probabilities: Platt Calibrated</span>
+            </div>
+        </div>
+
+        <div class="algo-detail-card">
+            <div class="algo-header">
+                <i class="fa-solid fa-network-wired"></i>
+                <div>
+                    <h3>Decision Tree Classifier</h3>
+                    <span class="badge badge-info">Interpretable Hierarchical Tree</span>
+                </div>
+            </div>
+            <p>
+                Constructed using the <strong>CART (Classification and Regression Trees)</strong> algorithm with Gini impurity metric.
+                Calibrated to a maximum depth of 6 with minimum leaf samples to ensure clinical decision transparency and eliminate over-fitting.
+            </p>
+            <div class="spec-pills">
+                <span>Criterion: Gini Impurity</span>
+                <span>Max Depth: 6</span>
+                <span>Min Leaf: 2</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Measured Test Set Metrics Section -->
+    <div class="metrics-section mt-5">
+        <div class="section-header-compact">
+            <h3><i class="fa-solid fa-chart-column"></i> Independent Test Set Evaluation</h3>
+            <span class="text-muted">Directly parsed from <code>models/model_metadata.json</code></span>
+        </div>
+
+        {% if metadata and metadata.metrics %}
+        <div class="metrics-comparison-table-card">
+            <table class="medical-table">
+                <thead>
+                    <tr>
+                        <th>Algorithm</th>
+                        <th>Overall Accuracy</th>
+                        <th>Weighted Precision</th>
+                        <th>Weighted Recall</th>
+                        <th>Weighted F1-Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Support Vector Machine (RBF)</strong></td>
+                        <td class="mono-text"><strong>{{ (metadata.metrics.svm.accuracy * 100)|round(2) }}%</strong></td>
+                        <td class="mono-text">{{ metadata.metrics.svm.precision }}</td>
+                        <td class="mono-text">{{ metadata.metrics.svm.recall }}</td>
+                        <td class="mono-text">{{ metadata.metrics.svm.f1_score }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Decision Tree</strong></td>
+                        <td class="mono-text"><strong>{{ (metadata.metrics.decision_tree.accuracy * 100)|round(2) }}%</strong></td>
+                        <td class="mono-text">{{ metadata.metrics.decision_tree.precision }}</td>
+                        <td class="mono-text">{{ metadata.metrics.decision_tree.recall }}</td>
+                        <td class="mono-text">{{ metadata.metrics.decision_tree.f1_score }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Per-Class Metrics -->
+        {% if metadata.metrics.per_class %}
+        <h4 class="mt-4 mb-3"><i class="fa-solid fa-layer-group"></i> Per-Class Evaluation Breakdown</h4>
+        <div class="per-class-grid">
+            {% for cname, stats in metadata.metrics.per_class.items() %}
+            <div class="per-class-card">
+                <div class="per-class-header">
+                    <span class="badge badge-{{ cname|lower }}">{{ cname|upper }}</span>
+                </div>
+                <div class="per-class-stats">
+                    <div class="stat-col">
+                        <small>SVM Precision:</small>
+                        <strong class="mono-text">{{ stats.svm.precision }}</strong>
+                    </div>
+                    <div class="stat-col">
+                        <small>SVM Recall:</small>
+                        <strong class="mono-text">{{ stats.svm.recall }}</strong>
+                    </div>
+                    <div class="stat-col">
+                        <small>SVM F1-Score:</small>
+                        <strong class="mono-text">{{ stats.svm.f1_score }}</strong>
+                    </div>
+                </div>
+                <div class="per-class-stats mt-2 pt-2 border-top">
+                    <div class="stat-col">
+                        <small>DT Precision:</small>
+                        <strong class="mono-text">{{ stats.decision_tree.precision }}</strong>
+                    </div>
+                    <div class="stat-col">
+                        <small>DT Recall:</small>
+                        <strong class="mono-text">{{ stats.decision_tree.recall }}</strong>
+                    </div>
+                    <div class="stat-col">
+                        <small>DT F1-Score:</small>
+                        <strong class="mono-text">{{ stats.decision_tree.f1_score }}</strong>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="empty-state">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <p>No model metadata found. Please train models via <code>python training/train_models.py</code> to view empirical evaluation metrics.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Feature Extraction & Preprocessing Pipeline Details -->
+    <div class="pipeline-details-section mt-5">
+        <div class="section-header-compact">
+            <h3><i class="fa-solid fa-microscope"></i> Radiomic Feature Extraction Pipeline (24 Dimensions)</h3>
+            <p class="text-muted">Standardized numerical representation extracted from each processed kidney scan slice</p>
+        </div>
+
+        <div class="features-category-grid">
+            <div class="feat-cat-card">
+                <h5>1. Statistical Intensity Moments (6-D)</h5>
+                <ul>
+                    <li>Mean Pixel Attenuation ($\mu$)</li>
+                    <li>Standard Deviation ($\sigma$) & Variance</li>
+                    <li>Skewness (Asymmetry of intensity distribution)</li>
+                    <li>Kurtosis (Tail heaviness / calcification peak)</li>
+                    <li>Shannon Information Entropy ($H$)</li>
+                    <li>Total Normalized Intensity Energy</li>
+                </ul>
+            </div>
+
+            <div class="feat-cat-card">
+                <h5>2. GLCM Texture Descriptors (5-D)</h5>
+                <ul>
+                    <li>Angular Second Moment (ASM / Energy)</li>
+                    <li>Texture Contrast (Sharpness of tissue edges)</li>
+                    <li>Dissimilarity (Local gray-level variations)</li>
+                    <li>Inverse Difference Moment (Homogeneity)</li>
+                    <li>Inter-pixel Correlation Coefficient</li>
+                </ul>
+            </div>
+
+            <div class="feat-cat-card">
+                <h5>3. Hu Invariant Moments (7-D)</h5>
+                <ul>
+                    <li>Hu Invariant 1 (Spread around centroid)</li>
+                    <li>Hu Invariants 2-6 (Scale & rotation invariants)</li>
+                    <li>Hu Invariant 7 (Skew invariant for asymmetry)</li>
+                    <li>Log-transformed for numerical stability</li>
+                </ul>
+            </div>
+
+            <div class="feat-cat-card">
+                <h5>4. Radiomic Attenuation Thresholds (6-D)</h5>
+                <ul>
+                    <li>Renal Stone Hyperdense Ratio (&gt;220)</li>
+                    <li>Renal Cyst Hypodense Ratio (&lt;60)</li>
+                    <li>Otsu Parenchymal Segmentation Area</li>
+                    <li>Contour Circularity ($\frac{4\pi A}{P^2}$)</li>
+                    <li>Convex Hull Solidity Ratio ($A / A_{hull}$)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

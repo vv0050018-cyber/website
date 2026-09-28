@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Create Account - KIDNEY AI{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-logo">
+                <i class="fa-solid fa-user-plus"></i>
+            </div>
+            <h2>Register Researcher Account</h2>
+            <p>Join the KIDNEY AI computer-aided diagnosis research project</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('register') }}" class="auth-form" id="registerForm">
+            <div class="form-group">
+                <label for="name"><i class="fa-solid fa-user-doctor"></i> Full Name & Title</label>
+                <input type="text" id="name" name="name" class="form-control" placeholder="Dr. Alex Rivera" required autofocus>
+            </div>
+
+            <div class="form-group">
+                <label for="email"><i class="fa-solid fa-envelope"></i> Institutional Email</label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="alex.rivera@university.edu" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password"><i class="fa-solid fa-lock"></i> Password</label>
+                <div class="password-wrapper">
+                    <input type="password" id="password" name="password" class="form-control" placeholder="Min. 6 characters" required oninput="checkPasswordStrength(this.value)">
+                    <button type="button" class="btn-toggle-pw" onclick="togglePasswordVisibility('password', this)">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
+                <!-- Password Strength Indicator -->
+                <div class="strength-meter-container">
+                    <div class="strength-bar" id="strengthBar"></div>
+                </div>
+                <small class="strength-text" id="strengthText">Password strength: None</small>
+            </div>
+
+            <div class="form-group">
+                <label for="confirm_password"><i class="fa-solid fa-lock-check"></i> Confirm Password</label>
+                <div class="password-wrapper">
+                    <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="Re-enter password" required>
+                    <button type="button" class="btn-toggle-pw" onclick="togglePasswordVisibility('confirm_password', this)">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">
+                <i class="fa-solid fa-circle-check"></i> Register Account
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Already have an account? <a href="{{ url_for('login') }}">Sign In</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

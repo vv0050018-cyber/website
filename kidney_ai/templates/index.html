@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}KIDNEY AI - AI-Powered Medical Image Diagnosis System{% endblock %}
+
+{% block content %}
+<div class="landing-hero">
+    <div class="hero-badge">
+        <i class="fa-solid fa-microchip"></i> B.Sc. Computer Science Final Year Project (AI & Data Science)
+    </div>
+    <h1 class="hero-title">KIDNEY <span class="gradient-text">AI</span></h1>
+    <h2 class="hero-subtitle">AI-Powered Medical Image Diagnosis System for Kidney Disease</h2>
+    <p class="hero-description">
+        A clinical computer-aided diagnosis (CAD) research platform utilizing dual machine learning architectures 
+        (Support Vector Machine + Decision Tree) with automated texture analysis, Otsu radiomic segmentation, 
+        and calibrated concordance verification.
+    </p>
+
+    <div class="hero-cta-group">
+        <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">
+            <i class="fa-solid fa-bolt"></i> Analyze Kidney Scan
+        </a>
+        <a href="{{ url_for('model_info') }}" class="btn btn-secondary btn-lg">
+            <i class="fa-solid fa-code-compare"></i> Explore Model Metrics
+        </a>
+    </div>
+
+    <!-- Live System Status Strip -->
+    <div class="status-strip">
+        <div class="status-item">
+            <span class="status-dot {% if model_loaded %}active{% else %}warning{% endif %}"></span>
+            <span>ML Core: <strong>{% if model_loaded %}Active (SVM + Decision Tree){% else %}Awaiting Training{% endif %}</strong></span>
+        </div>
+        <div class="status-item">
+            <i class="fa-solid fa-layer-group"></i>
+            <span>Classes: <strong>4 Pathologies</strong></span>
+        </div>
+        <div class="status-item">
+            <i class="fa-solid fa-fingerprint"></i>
+            <span>Pipeline: <strong>24-D Radiomic Vectors</strong></span>
+        </div>
+    </div>
+</div>
+
+<!-- 4 Supported Clinical Conditions Section -->
+<section class="section-container">
+    <div class="section-header">
+        <span class="section-pill">Pathology Spectrum</span>
+        <h3 class="section-title">Four Distinct Renal Classification Classes</h3>
+        <p class="section-desc">Classified strictly via statistical intensity moments, GLCM texture, and attenuation densities.</p>
+    </div>
+
+    <div class="conditions-grid">
+        <div class="condition-card normal">
+            <div class="cond-header">
+                <i class="fa-solid fa-heart-pulse"></i>
+                <span class="badge badge-normal">NORMAL</span>
+            </div>
+            <h4>Healthy Renal Parenchyma</h4>
+            <p>Uniform tissue attenuation, preserved corticomedullary differentiation, absence of calculus shadowing or hyperdense masses.</p>
+            <div class="cond-metric">GLCM Contrast: ~1.85 | Attenuation: Balanced</div>
+        </div>
+
+        <div class="condition-card cyst">
+            <div class="cond-header">
+                <i class="fa-solid fa-droplet"></i>
+                <span class="badge badge-cyst">CYST</span>
+            </div>
+            <h4>Renal Simple / Complex Cyst</h4>
+            <p>Well-circumscribed fluid lesion characterized by hypodense attenuation (&lt;20 HU), thin walls, and high internal homogeneity.</p>
+            <div class="cond-metric">Hypodense Ratio: High | Homogeneity: &gt;0.80</div>
+        </div>
+
+        <div class="condition-card tumor">
+            <div class="cond-header">
+                <i class="fa-solid fa-dna"></i>
+                <span class="badge badge-tumor">TUMOR</span>
+            </div>
+            <h4>Renal Cell Carcinoma (RCC) / Mass</h4>
+            <p>Solid neoplasm exhibiting severe spatial heterogeneity, necrotic irregular margins, microvascular distortion, and elevated GLCM entropy.</p>
+            <div class="cond-metric">GLCM Contrast: &gt;3.5 | Irregular Hu Moments</div>
+        </div>
+
+        <div class="condition-card stone">
+            <div class="cond-header">
+                <i class="fa-solid fa-gem"></i>
+                <span class="badge badge-stone">STONE</span>
+            </div>
+            <h4>Nephrolithiasis / Renal Calculi</h4>
+            <p>Punctate hyperdense calcium concretions (>200 HU) producing marked acoustic shadowing or extreme pixel intensity spikes.</p>
+            <div class="cond-metric">Hyperdense Ratio: Distinct | Kurtosis: &gt;3.5</div>
+        </div>
+    </div>
+</section>
+
+<!-- Visual Workflow Pipeline -->
+<section class="section-container bg-subtle">
+    <div class="section-header">
+        <span class="section-pill">Inference Pipeline</span>
+        <h3 class="section-title">How KIDNEY AI Analyzes a Scan</h3>
+        <p class="section-desc">Zero fake predictions, zero filename cheating. Every prediction follows an authentic pipeline.</p>
+    </div>
+
+    <div class="workflow-stepper">
+        <div class="step-card">
+            <div class="step-num">01</div>
+            <i class="fa-solid fa-file-arrow-up"></i>
+            <h5>Upload Scan</h5>
+            <p>Accepts DICOM/PNG/JPG CT or MRI axial kidney slices.</p>
+        </div>
+        <div class="step-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+
+        <div class="step-card">
+            <div class="step-num">02</div>
+            <i class="fa-solid fa-filter"></i>
+            <h5>Validation & Denoise</h5>
+            <p>Bilateral edge-preserving filter + CLAHE contrast boost.</p>
+        </div>
+        <div class="step-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+
+        <div class="step-card">
+            <div class="step-num">03</div>
+            <i class="fa-solid fa-bezier-curve"></i>
+            <h5>Radiomic Extraction</h5>
+            <p>Computes 24 features: GLCM texture, Hu moments, density ratios.</p>
+        </div>
+        <div class="step-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+
+        <div class="step-card">
+            <div class="step-num">04</div>
+            <i class="fa-solid fa-network-wired"></i>
+            <h5>SVM + Decision Tree</h5>
+            <p>Parallel evaluation by RBF Support Vector Machine & Decision Tree.</p>
+        </div>
+        <div class="step-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+
+        <div class="step-card">
+            <div class="step-num">05</div>
+            <i class="fa-solid fa-file-medical"></i>
+            <h5>Audit & Report</h5>
+            <p>Agreement verification, confidence calculation, and PDF export.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Technology Stack -->
+<section class="section-container">
+    <div class="section-header">
+        <span class="section-pill">Academic Architecture</span>
+        <h3 class="section-title">Built with Production Scientific Tooling</h3>
+    </div>
+    <div class="tech-grid">
+        <div class="tech-item"><i class="fa-brands fa-python"></i><span>Python 3.11</span></div>
+        <div class="tech-item"><i class="fa-solid fa-cube"></i><span>Scikit-Learn (SVM & DT)</span></div>
+        <div class="tech-item"><i class="fa-solid fa-eye"></i><span>OpenCV & CLAHE</span></div>
+        <div class="tech-item"><i class="fa-solid fa-server"></i><span>Flask REST Engine</span></div>
+        <div class="tech-item"><i class="fa-solid fa-database"></i><span>SQLite Persistence</span></div>
+        <div class="tech-item"><i class="fa-solid fa-file-pdf"></i><span>ReportLab PDF Generator</span></div>
+    </div>
+</section>
+{% endblock %}

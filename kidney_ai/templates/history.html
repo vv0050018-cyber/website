@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Prediction History - KIDNEY AI{% endblock %}
+
+{% block content %}
+<div class="history-container">
+    <div class="page-header flex-between">
+        <div>
+            <span class="section-pill"><i class="fa-solid fa-database"></i> Examination Records</span>
+            <h2 class="page-title">Kidney Scan Prediction History</h2>
+            <p class="page-desc">Comprehensive log of past CT/MRI analyses, dual-model concordance, and PDF reports.</p>
+        </div>
+        <div>
+            <a href="{{ url_for('analyze') }}" class="btn btn-primary">
+                <i class="fa-solid fa-plus"></i> New Scan
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Buttons & Search -->
+    <div class="history-controls">
+        <div class="filter-pills">
+            <a href="{{ url_for('history', class='ALL') }}" class="filter-pill {% if active_filter == 'ALL' %}active{% endif %}">All Scans</a>
+            <a href="{{ url_for('history', class='NORMAL') }}" class="filter-pill {% if active_filter == 'NORMAL' %}active{% endif %}">Normal</a>
+            <a href="{{ url_for('history', class='CYST') }}" class="filter-pill {% if active_filter == 'CYST' %}active{% endif %}">Cyst</a>
+            <a href="{{ url_for('history', class='TUMOR') }}" class="filter-pill {% if active_filter == 'TUMOR' %}active{% endif %}">Tumor</a>
+            <a href="{{ url_for('history', class='STONE') }}" class="filter-pill {% if active_filter == 'STONE' %}active{% endif %}">Stone</a>
+        </div>
+
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="historySearch" placeholder="Search by filename or ID..." onkeyup="filterHistoryTable()">
+        </div>
+    </div>
+
+    <!-- History Table -->
+    {% if records %}
+    <div class="history-table-card">
+        <div class="table-responsive">
+            <table class="medical-table" id="historyTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Scan Modality</th>
+                        <th>AI Finding</th>
+                        <th>SVM Prediction</th>
+                        <th>Decision Tree</th>
+                        <th>Confidence</th>
+                        <th>Concordance</th>
+                        <th>Date & Time</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rec in records %}
+                    <tr>
+                        <td class="mono-text">#{{ rec.id }}</td>
+                        <td><span class="badge badge-modality">{{ rec.scan_type }}</span></td>
+                        <td>
+                            <span class="badge badge-{{ rec.prediction|lower }}">
+                                {{ rec.prediction }}
+                            </span>
+                        </td>
+                        <td class="mono-text">{{ rec.svm_prediction }}</td>
+                        <td class="mono-text">{{ rec.decision_tree_prediction }}</td>
+                        <td>
+                            {% if rec.confidence %}
+                            <span class="mono-text">{{ (rec.confidence * 100)|round(1) }}%</span>
+                            {% else %}
+                            <span class="text-muted font-sm">Uncalibrated</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if rec.models_agree %}
+                            <span class="tag-status agreed"><i class="fa-solid fa-check"></i> Agree</span>
+                            {% else %}
+                            <span class="tag-status disagreed"><i class="fa-solid fa-triangle-exclamation"></i> Disagree</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-muted font-sm">{{ rec.created_at[:16] }}</td>
+                        <td>
+                            <div class="table-actions">
+                                <a href="{{ url_for('result', pred_id=rec.id) }}" class="btn-icon" title="View Full Result">
+                                    <i class="fa-solid fa-eye"></i>
+                                </a>
+                                <a href="{{ url_for('download_pdf', pred_id=rec.id) }}" class="btn-icon" title="Download Clinical PDF Report">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                </a>
+                                <form method="POST" action="{{ url_for('delete_history_item', pred_id=rec.id) }}" style="display:inline;" onsubmit="return confirm('Permanently delete scan analysis record #{{ rec.id }}?');">
+                                    <button type="submit" class="btn-icon btn-icon-danger" title="Delete Record">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state-large">
+        <i class="fa-solid fa-box-archive"></i>
+        <h3>No Examination Records Found</h3>
+        <p>No kidney CT/MRI scans have been processed under this category filter.</p>
+        <a href="{{ url_for('analyze') }}" class="btn btn-primary">Analyze Kidney Scan Now</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function filterHistoryTable() {
+    const query = document.getElementById('historySearch').value.toLowerCase();
+    const rows = document.querySelectorAll('#historyTable tbody tr');
+    rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(query) ? '' : 'none';
+    });
+}
+</script>
+{% endblock %}

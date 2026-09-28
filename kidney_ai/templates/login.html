@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In - KIDNEY AI{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-logo">
+                <i class="fa-solid fa-lungs-virus"></i>
+            </div>
+            <h2>Clinician & Researcher Login</h2>
+            <p>Access the KIDNEY AI diagnostic and prediction console</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('login') }}" class="auth-form" id="loginForm">
+            <div class="form-group">
+                <label for="email"><i class="fa-solid fa-envelope"></i> Email Address</label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="doctor@hospital.org" required autofocus>
+            </div>
+
+            <div class="form-group">
+                <label for="password"><i class="fa-solid fa-lock"></i> Password</label>
+                <div class="password-wrapper">
+                    <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required>
+                    <button type="button" class="btn-toggle-pw" onclick="togglePasswordVisibility('password', this)">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-options">
+                <label class="checkbox-label">
+                    <input type="checkbox" name="remember" value="1">
+                    <span>Remember me</span>
+                </label>
+                <a href="#" class="forgot-link" onclick="alert('For academic demo access, please use the pre-configured researcher credentials or create a new account.'); return false;">Forgot password?</a>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" id="btnSubmit">
+                <i class="fa-solid fa-right-to-bracket"></i> Sign In
+            </button>
+        </form>
+
+        <div class="demo-account-hint">
+            <p><strong><i class="fa-solid fa-key"></i> Quick Academic Demo Credentials:</strong></p>
+            <p><code>doctor@hospital.org</code> / <code>Doctor123!</code></p>
+            <button type="button" class="btn btn-sm btn-ghost" onclick="fillDemoCredentials()">Auto-fill Demo</button>
+        </div>
+
+        <div class="auth-footer">
+            <p>Need access? <a href="{{ url_for('register') }}">Create an account</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function fillDemoCredentials() {
+    document.getElementById('email').value = 'doctor@hospital.org';
+    document.getElementById('password').value = 'Doctor123!';
+}
+</script>
+{% endblock %}

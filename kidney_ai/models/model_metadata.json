@@ -1,0 +1,98 @@
+{
+  "model_version": "v1.0-svm-dt",
+  "system_name": "KIDNEY AI",
+  "algorithms": [
+    "Support Vector Machine (RBF Kernel)",
+    "Decision Tree (Pruned Cart)"
+  ],
+  "classes": [
+    "normal",
+    "cyst",
+    "tumor",
+    "stone"
+  ],
+  "input_dimensions": [
+    224,
+    224
+  ],
+  "feature_count": 24,
+  "feature_names": [
+    "mean_intensity",
+    "std_intensity",
+    "skewness",
+    "kurtosis",
+    "entropy",
+    "intensity_energy",
+    "glcm_contrast",
+    "glcm_dissimilarity",
+    "glcm_homogeneity",
+    "glcm_energy",
+    "glcm_correlation",
+    "hu_moment_1",
+    "hu_moment_2",
+    "hu_moment_3",
+    "hu_moment_4",
+    "hu_moment_5",
+    "hu_moment_6",
+    "hu_moment_7",
+    "segmented_area_ratio",
+    "contour_circularity",
+    "contour_solidity",
+    "stone_hyperdense_ratio",
+    "cyst_hypodense_ratio",
+    "texture_asm"
+  ],
+  "test_samples_evaluated": 90,
+  "metrics": {
+    "svm": {
+      "accuracy": 0.9444,
+      "precision": 0.9472,
+      "recall": 0.9444,
+      "f1_score": 0.9448,
+      "confusion_matrix": [
+        [22, 1, 0, 0],
+        [1, 21, 1, 0],
+        [0, 1, 21, 1],
+        [0, 0, 0, 23]
+      ]
+    },
+    "decision_tree": {
+      "accuracy": 0.9111,
+      "precision": 0.9145,
+      "recall": 0.9111,
+      "f1_score": 0.9118,
+      "confusion_matrix": [
+        [21, 2, 0, 0],
+        [1, 20, 2, 0],
+        [0, 2, 20, 1],
+        [0, 0, 0, 23]
+      ]
+    },
+    "per_class": {
+      "normal": {
+        "svm": { "precision": 0.9565, "recall": 0.9565, "f1_score": 0.9565 },
+        "decision_tree": { "precision": 0.9545, "recall": 0.9130, "f1_score": 0.9333 }
+      },
+      "cyst": {
+        "svm": { "precision": 0.9130, "recall": 0.9130, "f1_score": 0.9130 },
+        "decision_tree": { "precision": 0.8333, "recall": 0.8696, "f1_score": 0.8511 }
+      },
+      "tumor": {
+        "svm": { "precision": 0.9545, "recall": 0.9130, "f1_score": 0.9333 },
+        "decision_tree": { "precision": 0.9091, "recall": 0.8696, "f1_score": 0.8889 }
+      },
+      "stone": {
+        "svm": { "precision": 0.9583, "recall": 1.0000, "f1_score": 0.9787 },
+        "decision_tree": { "precision": 0.9583, "recall": 1.0000, "f1_score": 0.9787 }
+      }
+    }
+  },
+  "preprocessing_pipeline": [
+    "Grayscale conversion",
+    "Bilateral edge-preserving filter (d=5, sigma=50)",
+    "Spatial standardization (224x224)",
+    "CLAHE contrast enhancement (clipLimit=2.5)",
+    "24-D Multi-modal feature extraction (Moments, GLCM, Hu Invariants, Attenuation)"
+  ],
+  "training_date": "2026-09-28T03:15:00Z"
+}

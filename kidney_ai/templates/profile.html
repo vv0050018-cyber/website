@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Clinician Profile - KIDNEY AI{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="page-header">
+        <span class="section-pill"><i class="fa-solid fa-user-doctor"></i> Researcher Profile</span>
+        <h2 class="page-title">User Account & Diagnostic Summary</h2>
+    </div>
+
+    <div class="profile-grid">
+        <div class="profile-card">
+            <div class="profile-avatar">
+                <i class="fa-solid fa-user-doctor"></i>
+            </div>
+            <h3>{{ user.name }}</h3>
+            <span class="profile-role">{% if user.is_admin %}Lead AI Researcher (Administrator){% else %}Clinical Investigator{% endif %}</span>
+            <div class="profile-info-list mt-4">
+                <div class="pinfo-item">
+                    <span>Email:</span>
+                    <strong>{{ user.email }}</strong>
+                </div>
+                <div class="pinfo-item">
+                    <span>Member Since:</span>
+                    <strong>{{ user.created_at[:10] }}</strong>
+                </div>
+                <div class="pinfo-item">
+                    <span>Account Security:</span>
+                    <strong class="text-success"><i class="fa-solid fa-shield-check"></i> PBKDF2 SHA-256</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-card">
+            <h3><i class="fa-solid fa-chart-pie"></i> Diagnostic Activity Summary</h3>
+            <div class="profile-stats-grid mt-3">
+                <div class="pstat-box">
+                    <span>Total Scans</span>
+                    <strong>{{ stats.total_scans }}</strong>
+                </div>
+                <div class="pstat-box">
+                    <span>Concordant Cases</span>
+                    <strong class="text-success">{{ stats.concordant_cases }}</strong>
+                </div>
+                <div class="pstat-box">
+                    <span>Agreement Rate</span>
+                    <strong class="text-primary">{{ stats.agreement_rate }}%</strong>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <a href="{{ url_for('history') }}" class="btn btn-primary btn-block">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Access Full Historical Archives
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

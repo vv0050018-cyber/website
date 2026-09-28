@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}Analyze Kidney Medical Image - KIDNEY AI{% endblock %}
+
+{% block content %}
+<div class="analyze-container">
+    <div class="page-header">
+        <span class="section-pill"><i class="fa-solid fa-microscope"></i> Diagnostic CAD Module</span>
+        <h2 class="page-title">Analyze Kidney Medical Image</h2>
+        <p class="page-desc">
+            Upload an axial kidney CT or MRI scan slice for multi-modal feature extraction and dual SVM + Decision Tree classification.
+        </p>
+    </div>
+
+    {% if not model_loaded %}
+    <div class="alert-box alert-warning">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <div>
+            <strong>Machine Learning Models Not Ready:</strong>
+            <p>{{ model_load_error }}</p>
+            <p>To train models, run: <code>python training/train_models.py</code> in your project root.</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('analyze') }}" enctype="multipart/form-data" id="uploadForm">
+        <div class="upload-grid">
+            <!-- Left: Upload Zone & Configuration -->
+            <div class="upload-card">
+                <div class="form-group mb-4">
+                    <label class="form-label-lg"><i class="fa-solid fa-sliders"></i> 1. Select Examination Modality</label>
+                    <div class="modality-selector">
+                        <label class="modality-option active" id="labelCT">
+                            <input type="radio" name="scan_type" value="CT Scan" checked onchange="updateModality('CT Scan')">
+                            <div class="modality-content">
+                                <i class="fa-solid fa-circle-radiation"></i>
+                                <div>
+                                    <strong>CT Scan (Computed Tomography)</strong>
+                                    <small>Primary recommended modality for parenchymal calcification & renal masses</small>
+                                </div>
+                            </div>
+                        </label>
+
+                        <label class="modality-option" id="labelMRI">
+                            <input type="radio" name="scan_type" value="MRI Scan" onchange="updateModality('MRI Scan')">
+                            <div class="modality-content">
+                                <i class="fa-solid fa-magnet"></i>
+                                <div>
+                                    <strong>MRI Scan (Magnetic Resonance)</strong>
+                                    <small>Supported soft-tissue contrast examination for cyst fluid differentiation</small>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label-lg"><i class="fa-solid fa-cloud-arrow-up"></i> 2. Upload Kidney Scan Slice</label>
+                    <div class="drop-zone" id="dropZone">
+                        <input type="file" id="imageInput" name="image" accept=".png,.jpg,.jpeg,.bmp,.tiff" class="file-input-hidden" required>
+                        <div class="drop-zone-prompt" id="dropPrompt">
+                            <div class="drop-icon">
+                                <i class="fa-solid fa-file-medical"></i>
+                            </div>
+                            <h4>Drag & Drop Kidney Scan Here</h4>
+                            <p class="drop-sub">or <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('imageInput').click()">Browse Image</button></p>
+                            <span class="file-types-hint">Supported Formats: PNG, JPG, JPEG, BMP, TIFF (Max 16 MB)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Pre-prediction Validation & Preview -->
+            <div class="upload-card preview-card">
+                <h3><i class="fa-solid fa-clipboard-check"></i> Scan Inspection & Validation</h3>
+                <p class="text-muted">Real-time image verification before sending to radiomic pipeline</p>
+
+                <div class="preview-box" id="previewContainer">
+                    <div class="empty-preview" id="emptyPreview">
+                        <i class="fa-solid fa-image"></i>
+                        <p>No scan selected yet.<br>Choose a file or drag an image into the upload box.</p>
+                    </div>
+                    <img id="imagePreview" class="preview-img-element" style="display:none;" alt="Scan Preview">
+                </div>
+
+                <!-- Live File Metrics Table -->
+                <div class="meta-table-box" id="metaTable" style="display:none;">
+                    <div class="meta-row">
+                        <span class="meta-key">Filename:</span>
+                        <span class="meta-val mono-text" id="metaFilename">-</span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="meta-key">Modality:</span>
+                        <span class="meta-val" id="metaModality">CT Scan</span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="meta-key">Resolution:</span>
+                        <span class="meta-val mono-text" id="metaDimensions">-</span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="meta-key">File Size:</span>
+                        <span class="meta-val mono-text" id="metaSize">-</span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="meta-key">Validation Status:</span>
+                        <span class="meta-val text-success" id="metaStatus"><i class="fa-solid fa-check"></i> Ready for Inference</span>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn btn-primary btn-block btn-lg mt-4" id="submitBtn" disabled>
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Execute Dual-Model Analysis
+                </button>
+
+                <!-- Processing Overlay / Progress State -->
+                <div class="processing-overlay" id="processingOverlay" style="display:none;">
+                    <div class="spinner"></div>
+                    <h4 id="procStepTitle">Preprocessing Scan...</h4>
+                    <p id="procStepDesc">Applying Bilateral filter and CLAHE contrast enhancement...</p>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('imageInput');
+const submitBtn = document.getElementById('submitBtn');
+const previewImg = document.getElementById('imagePreview');
+const emptyPreview = document.getElementById('emptyPreview');
+const metaTable = document.getElementById('metaTable');
+
+dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+});
+
+dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('dragover');
+});
+
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    if (e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        handleFileSelection(fileInput.files[0]);
+    }
+});
+
+fileInput.addEventListener('change', () => {
+    if (fileInput.files.length) {
+        handleFileSelection(fileInput.files[0]);
+    }
+});
+
+function handleFileSelection(file) {
+    if (!file) return;
+
+    // Validate size (16MB)
+    if (file.size > 16 * 1024 * 1024) {
+        alert("File size exceeds maximum 16 MB limit. Please select a compressed clinical slice.");
+        fileInput.value = "";
+        return;
+    }
+
+    // Validate extension
+    const validExts = ['png', 'jpg', 'jpeg', 'bmp', 'tiff'];
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (!validExts.includes(ext)) {
+        alert(`Invalid format (.${ext}). Supported formats: ${validExts.join(', ').toUpperCase()}`);
+        fileInput.value = "";
+        return;
+    }
+
+    // Load preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        previewImg.src = e.target.result;
+        previewImg.style.display = 'block';
+        emptyPreview.style.display = 'none';
+
+        // Measure natural dimensions
+        const imgObj = new Image();
+        imgObj.src = e.target.result;
+        imgObj.onload = () => {
+            document.getElementById('metaDimensions').innerText = `${imgObj.width} × ${imgObj.height} px`;
+        };
+
+        document.getElementById('metaFilename').innerText = file.name;
+        document.getElementById('metaSize').innerText = `${(file.size / 1024).toFixed(1)} KB`;
+        metaTable.style.display = 'block';
+        submitBtn.disabled = false;
+    };
+    reader.readAsDataURL(file);
+}
+
+function updateModality(modality) {
+    document.getElementById('metaModality').innerText = modality;
+    document.getElementById('labelCT').classList.toggle('active', modality === 'CT Scan');
+    document.getElementById('labelMRI').classList.toggle('active', modality === 'MRI Scan');
+}
+
+document.getElementById('uploadForm').addEventListener('submit', () => {
+    document.getElementById('processingOverlay').style.display = 'flex';
+    submitBtn.disabled = true;
+});
+</script>
+{% endblock %}

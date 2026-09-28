@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - KIDNEY AI{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Top Welcome Banner -->
+    <div class="dash-hero">
+        <div class="dash-hero-info">
+            <span class="user-greeting"><i class="fa-solid fa-stethoscope"></i> Welcome, {{ current_user.name }}</span>
+            <h2 class="dash-title">Kidney Disease Diagnostic Console</h2>
+            <p class="dash-subtitle">Real-time analysis powered by Support Vector Machine & Decision Tree classifiers.</p>
+        </div>
+        <div class="dash-hero-cta">
+            <a href="{{ url_for('analyze') }}" class="btn btn-primary btn-lg shadow-glow">
+                <i class="fa-solid fa-microscope"></i> Analyze Kidney Scan
+            </a>
+        </div>
+    </div>
+
+    <!-- 5 Core Disease & Metric Statistics Cards -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon total"><i class="fa-solid fa-folder-open"></i></div>
+            <div class="stat-details">
+                <span class="stat-label">Total Scans</span>
+                <span class="stat-value">{{ stats.total_scans }}</span>
+                <span class="stat-sub">Archived examinations</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon normal"><i class="fa-solid fa-heart-pulse"></i></div>
+            <div class="stat-details">
+                <span class="stat-label">Normal</span>
+                <span class="stat-value text-normal">{{ stats.normal_cases }}</span>
+                <span class="stat-sub">Healthy renal scans</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon cyst"><i class="fa-solid fa-droplet"></i></div>
+            <div class="stat-details">
+                <span class="stat-label">Cyst</span>
+                <span class="stat-value text-cyst">{{ stats.cyst_cases }}</span>
+                <span class="stat-sub">Fluid-filled lesions</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon tumor"><i class="fa-solid fa-dna"></i></div>
+            <div class="stat-details">
+                <span class="stat-label">Tumor</span>
+                <span class="stat-value text-tumor">{{ stats.tumor_cases }}</span>
+                <span class="stat-sub">Renal masses & RCC</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon stone"><i class="fa-solid fa-gem"></i></div>
+            <div class="stat-details">
+                <span class="stat-label">Stone</span>
+                <span class="stat-value text-stone">{{ stats.stone_cases }}</span>
+                <span class="stat-sub">Nephrolithiasis cases</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Two-Column Layout -->
+    <div class="dash-columns">
+        <!-- Left: Recent Predictions -->
+        <div class="dash-card">
+            <div class="dash-card-header">
+                <div>
+                    <h3><i class="fa-solid fa-clock-rotate-left"></i> Recent Predictions</h3>
+                    <p>Latest radiomic evaluations and model concordance</p>
+                </div>
+                <a href="{{ url_for('history') }}" class="btn btn-outline btn-sm">View All History</a>
+            </div>
+
+            {% if recent_scans %}
+            <div class="table-responsive">
+                <table class="medical-table">
+                    <thead>
+                        <tr>
+                            <th>Modality</th>
+                            <th>AI Prediction</th>
+                            <th>SVM vs DT</th>
+                            <th>Concordance</th>
+                            <th>Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for scan in recent_scans %}
+                        <tr>
+                            <td><span class="badge badge-modality">{{ scan.scan_type }}</span></td>
+                            <td>
+                                <span class="badge badge-{{ scan.prediction|lower }}">
+                                    {{ scan.prediction }}
+                                </span>
+                            </td>
+                            <td class="mono-text font-sm">
+                                SVM: {{ scan.svm_prediction }} | DT: {{ scan.decision_tree_prediction }}
+                            </td>
+                            <td>
+                                {% if scan.models_agree %}
+                                <span class="tag-status agreed"><i class="fa-solid fa-circle-check"></i> Agree</span>
+                                {% else %}
+                                <span class="tag-status disagreed"><i class="fa-solid fa-triangle-exclamation"></i> Disagree</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-muted font-sm">{{ scan.created_at[:16] }}</td>
+                            <td>
+                                <a href="{{ url_for('result', pred_id=scan.id) }}" class="btn btn-ghost btn-sm">
+                                    <i class="fa-solid fa-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fa-solid fa-flask-vial"></i>
+                <p>No recent kidney scans evaluated yet.</p>
+                <a href="{{ url_for('analyze') }}" class="btn btn-primary btn-sm">Run First Analysis</a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Right: Model Performance & System Information -->
+        <div class="dash-card-sidebar">
+            <!-- Model Performance Card -->
+            <div class="dash-card">
+                <div class="dash-card-header">
+                    <div>
+                        <h3><i class="fa-solid fa-chart-line"></i> Model Performance</h3>
+                        <p>Measured test set evaluation</p>
+                    </div>
+                    <span class="badge badge-info">v1.0-svm-dt</span>
+                </div>
+
+                <div class="model-metric-row">
+                    <div class="model-metric-box">
+                        <span class="model-name">Support Vector Machine</span>
+                        <div class="metric-number">RBF Kernel</div>
+                        <span class="metric-desc">Platt-scaled Probabilities</span>
+                    </div>
+                    <div class="model-metric-box">
+                        <span class="model-name">Decision Tree</span>
+                        <div class="metric-number">Gini Criterion</div>
+                        <span class="metric-desc">Max Depth: 6 (Pruned)</span>
+                    </div>
+                </div>
+
+                <div class="agreement-rate-box">
+                    <div class="agreement-header">
+                        <span>Dual-Model Historical Agreement Rate</span>
+                        <strong>{{ stats.agreement_rate }}%</strong>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-bar-fill" style="width: {{ stats.agreement_rate }}%"></div>
+                    </div>
+                </div>
+
+                <a href="{{ url_for('model_info') }}" class="btn btn-secondary btn-block btn-sm">
+                    <i class="fa-solid fa-magnifying-glass-chart"></i> View Full Confusion Matrix & Report
+                </a>
+            </div>
+
+            <!-- System Information Card -->
+            <div class="dash-card mt-4">
+                <div class="dash-card-header">
+                    <div>
+                        <h3><i class="fa-solid fa-circle-nodes"></i> System Information</h3>
+                        <p>Academic specifications & pipeline parameters</p>
+                    </div>
+                </div>
+
+                <ul class="system-spec-list">
+                    <li><span>Input Resolution:</span> <strong>224 × 224 pixels</strong></li>
+                    <li><span>Color Space:</span> <strong>Normalized 8-bit Grayscale</strong></li>
+                    <li><span>Contrast Filter:</span> <strong>CLAHE (clip=2.5, grid=8x8)</strong></li>
+                    <li><span>Feature Vector:</span> <strong>24 Dimensions (GLCM + Moments)</strong></li>
+                    <li><span>Database:</span> <strong>SQLite Local (ACID Compliant)</strong></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

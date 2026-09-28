@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Analysis Result - KIDNEY AI{% endblock %}
+
+{% block content %}
+<div class="result-container">
+    <div class="result-header">
+        <div class="result-header-left">
+            <span class="section-pill"><i class="fa-solid fa-square-poll-vertical"></i> Clinical Analysis Report</span>
+            <h2 class="result-title">KIDNEY AI ANALYSIS RESULT</h2>
+            <p class="result-subtitle">Dual-Model Radiomic Classification & Concordance Verification</p>
+        </div>
+        <div class="result-header-actions">
+            <a href="{{ url_for('download_pdf', pred_id=record.id) }}" class="btn btn-primary">
+                <i class="fa-solid fa-file-pdf"></i> Download PDF Report
+            </a>
+            <a href="{{ url_for('analyze') }}" class="btn btn-outline">
+                <i class="fa-solid fa-plus"></i> Analyze Another Scan
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Results Grid -->
+    <div class="result-grid">
+        <!-- Left: Image Preview & Examination Parameters -->
+        <div class="result-card">
+            <h3><i class="fa-solid fa-x-ray"></i> Evaluated Kidney Scan</h3>
+            <div class="result-image-box">
+                <img src="{{ url_for('static', filename='../uploads/' + record.image_filename) }}" alt="Analyzed Scan" class="result-img" onerror="this.src='{{ url_for('static', filename='images/placeholder_scan.png') }}';">
+            </div>
+
+            <div class="meta-list mt-3">
+                <div class="meta-item">
+                    <span>Modality:</span>
+                    <strong>{{ record.scan_type }}</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Filename:</span>
+                    <strong class="mono-text font-sm">{{ record.image_filename }}</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Analyzed At:</span>
+                    <strong>{{ record.created_at }}</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Model Engine:</span>
+                    <strong>SVM (RBF) + Decision Tree</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Model Version:</span>
+                    <strong class="mono-text">{{ record.model_version }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Diagnostic Output, Model Breakdown, Agreement -->
+        <div class="result-card">
+            <!-- Primary Classification Banner -->
+            <div class="primary-verdict-box verdict-{{ record.prediction|lower }}">
+                <span class="verdict-label">PRIMARY CLASSIFICATION RESULT</span>
+                <h1 class="verdict-class">{{ record.prediction }}</h1>
+                
+                {% if record.confidence %}
+                <div class="verdict-confidence">
+                    <span>Statistical Confidence:</span>
+                    <strong>{{ (record.confidence * 100)|round(1) }}%</strong>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Model Agreement Status Badge -->
+            <div class="agreement-status-card {% if record.models_agree %}agreed{% else %}disagreed{% endif %}">
+                <div class="agree-icon">
+                    <i class="fa-solid {% if record.models_agree %}fa-circle-check{% else %}fa-triangle-exclamation{% endif %}"></i>
+                </div>
+                <div class="agree-content">
+                    <h4>{% if record.models_agree %}Models Agree (High Concordance){% else %}Model Disagreement Detected{% endif %}</h4>
+                    <p>
+                        {% if record.models_agree %}
+                        Both the Support Vector Machine (RBF) and Decision Tree reached identical diagnostic conclusions ({{ record.prediction }}).
+                        {% else %}
+                        The Support Vector Machine ({{ record.svm_prediction }}) and Decision Tree ({{ record.decision_tree_prediction }}) produced conflicting classifications. Radiologist secondary consultation is advised.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Dual Algorithm Comparison Table -->
+            <h4 class="mt-4 mb-2"><i class="fa-solid fa-code-compare"></i> Individual Algorithm Breakdown</h4>
+            <div class="algo-compare-grid">
+                <div class="algo-box">
+                    <span class="algo-title">Support Vector Machine (SVM)</span>
+                    <div class="algo-pred badge badge-{{ record.svm_prediction|lower }}">
+                        {{ record.svm_prediction }}
+                    </div>
+                    <small>RBF Hyperplane Distance</small>
+                </div>
+
+                <div class="algo-box">
+                    <span class="algo-title">Decision Tree Classifier</span>
+                    <div class="algo-pred badge badge-{{ record.decision_tree_prediction|lower }}">
+                        {{ record.decision_tree_prediction }}
+                    </div>
+                    <small>Hierarchical Cart Splits</small>
+                </div>
+            </div>
+
+            <!-- Extracted Radiomic Key Indicators -->
+            {% if features %}
+            <h4 class="mt-4 mb-2"><i class="fa-solid fa-bezier-curve"></i> Extracted Radiomic Indicators</h4>
+            <div class="features-summary-table">
+                <div class="feat-row">
+                    <span>Mean Parenchyma Intensity:</span>
+                    <strong class="mono-text">{{ features.get('mean_intensity', 'N/A') }}</strong>
+                </div>
+                <div class="feat-row">
+                    <span>GLCM Texture Contrast:</span>
+                    <strong class="mono-text">{{ features.get('glcm_contrast', 'N/A') }}</strong>
+                </div>
+                <div class="feat-row">
+                    <span>GLCM Homogeneity:</span>
+                    <strong class="mono-text">{{ features.get('glcm_homogeneity', 'N/A') }}</strong>
+                </div>
+                <div class="feat-row">
+                    <span>Stone Hyperdense Ratio (>220):</span>
+                    <strong class="mono-text">{{ features.get('stone_density_ratio', 'N/A') }}</strong>
+                </div>
+                <div class="feat-row">
+                    <span>Cyst Hypodense Ratio (<60):</span>
+                    <strong class="mono-text">{{ features.get('cyst_hypodense_ratio', 'N/A') }}</strong>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Bottom Disclaimer Box -->
+            <div class="clinical-disclaimer-box mt-4">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <p>
+                    <strong>Medical Disclaimer:</strong> This result is generated by an AI-based research and educational CAD system.
+                    It should NOT be used as a standalone medical diagnosis. Always consult a qualified physician or radiologist for clinical interpretation.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

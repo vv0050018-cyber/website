@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}About - KIDNEY AI Project{% endblock %}
+
+{% block content %}
+<div class="about-container">
+    <div class="page-header">
+        <span class="section-pill"><i class="fa-solid fa-graduation-cap"></i> Academic Project</span>
+        <h2 class="page-title">About the KIDNEY AI Project</h2>
+        <p class="page-desc">Final-Year B.Sc. Computer Science (Artificial Intelligence & Data Science) Capstone Project</p>
+    </div>
+
+    <div class="about-grid">
+        <div class="about-card">
+            <h3><i class="fa-solid fa-bullseye"></i> Project Aim & Motivation</h3>
+            <p>
+                Kidney diseases—including renal cell carcinoma (tumors), fluid-filled cysts, and nephrolithiasis (kidney stones)—represent 
+                critical diagnostic challenges in diagnostic radiology. Early and precise classification of computed tomography (CT) 
+                and magnetic resonance imaging (MRI) scans can substantially optimize clinical decision-making.
+            </p>
+            <p>
+                The primary objective of <strong>KIDNEY AI</strong> is to construct an authentic, auditable computer-aided diagnosis (CAD) 
+                system utilizing classical machine learning algorithms (Support Vector Machine and Decision Tree). Unlike opaque "black-box" 
+                deep networks, this system extracts explicit radiomic features (texture, moments, and attenuation values), offering 
+                clinical interpretability and dual-model concordance verification.
+            </p>
+        </div>
+
+        <div class="about-card">
+            <h3><i class="fa-solid fa-list-check"></i> Key Engineering Principles</h3>
+            <ul class="principles-list">
+                <li><strong>No Simulated or Fake AI:</strong> All predictions originate from trained scikit-learn models serialized via joblib.</li>
+                <li><strong>No Filename Cheating:</strong> Image content undergoes strict array decoding, CLAHE filtering, and feature extraction.</li>
+                <li><strong>Dual Algorithm Concordance:</strong> The system checks whether SVM and Decision Tree agree, explicitly signaling uncertainty if disagreement occurs.</li>
+                <li><strong>Clinical Privacy & Audit Trail:</strong> SQLite database archives all analyses with SHA-256 hashed passwords and audit logging.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="about-card mt-4">
+        <h3><i class="fa-solid fa-shield-halved"></i> Ethical & Medical Disclaimer</h3>
+        <p class="disclaimer-p">
+            KIDNEY AI is strictly an academic, research, and educational demonstration tool. It does not provide medical advice, 
+            prescriptions, or definitive diagnostic determinations. All medical decisions must be reviewed by qualified, licensed healthcare providers.
+        </p>
+    </div>
+</div>
+{% endblock %}

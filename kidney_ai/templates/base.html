@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}KIDNEY AI - Medical Image Diagnosis System{% endblock %}</title>
+    <!-- Modern Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('dashboard' if current_user else 'index') }}" class="brand-logo">
+                <div class="brand-icon">
+                    <i class="fa-solid fa-lungs-virus"></i>
+                </div>
+                <div class="brand-text">
+                    <span class="brand-title">KIDNEY <span class="highlight">AI</span></span>
+                    <span class="brand-sub">Clinical CAD System</span>
+                </div>
+            </a>
+
+            <div class="nav-links">
+                {% if current_user %}
+                    <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                        <i class="fa-solid fa-chart-pie"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('analyze') }}" class="nav-link {% if request.endpoint == 'analyze' %}active{% endif %}">
+                        <i class="fa-solid fa-microscope"></i> Scan Analysis
+                    </a>
+                    <a href="{{ url_for('history') }}" class="nav-link {% if request.endpoint == 'history' %}active{% endif %}">
+                        <i class="fa-solid fa-clock-rotate-left"></i> History
+                    </a>
+                    <a href="{{ url_for('model_info') }}" class="nav-link {% if request.endpoint == 'model_info' %}active{% endif %}">
+                        <i class="fa-solid fa-brain"></i> Model Info
+                    </a>
+                    <a href="{{ url_for('about') }}" class="nav-link {% if request.endpoint == 'about' %}active{% endif %}">
+                        <i class="fa-solid fa-circle-info"></i> About
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('index') }}" class="nav-link">Home</a>
+                    <a href="{{ url_for('model_info') }}" class="nav-link">Model Architecture</a>
+                    <a href="{{ url_for('about') }}" class="nav-link">Project Scope</a>
+                {% endif %}
+            </div>
+
+            <div class="nav-actions">
+                {% if current_user %}
+                    <div class="user-dropdown">
+                        <a href="{{ url_for('profile') }}" class="user-badge">
+                            <i class="fa-solid fa-user-doctor"></i>
+                            <span>{{ current_user.name }}</span>
+                        </a>
+                        <a href="{{ url_for('logout') }}" class="btn btn-outline btn-sm">
+                            <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+                        </a>
+                    </div>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-ghost">Login</a>
+                    <a href="{{ url_for('register') }}" class="btn btn-primary">Create Account</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Global Flash Messages -->
+    <div class="flash-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-alert alert-{{ category }}">
+                        <i class="fa-solid {% if category == 'success' %}fa-circle-check{% elif category == 'danger' %}fa-circle-exclamation{% else %}fa-circle-info{% endif %}"></i>
+                        <span>{{ message }}</span>
+                        <button class="flash-close" onclick="this.parentElement.remove()">&times;</button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Mandatory Medical Disclaimer Banner -->
+    <footer class="app-footer">
+        <div class="footer-container">
+            <div class="disclaimer-box">
+                <i class="fa-solid fa-shield-halved"></i>
+                <p>
+                    <strong>Academic Research & Clinical Decision-Support Notice:</strong>
+                    This system was developed as a final-year B.Sc. Computer Science (AI & Data Science) demonstration project.
+                    Predictions generated by Support Vector Machine and Decision Tree classifiers are strictly investigational and 
+                    educational. They do not constitute an autonomous medical diagnosis or clinical treatment prescription.
+                    Always consult a board-certified radiologist or nephrologist for clinical management.
+                </p>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; {{ current_year }} KIDNEY AI — Multimodal Renal Image Diagnosis Engine.</p>
+                <p class="mono-text">Algorithms: SVM (RBF) & Decision Tree | Classes: NORMAL, CYST, TUMOR, STONE</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>
